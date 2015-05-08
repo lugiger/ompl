@@ -178,7 +178,7 @@ else(MSVC)
 endif(MSVC)
 
 # install the library
-install(TARGETS ompl
+install(TARGETS ompl LKH
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT ompl)
 if(NOT MSVC)
