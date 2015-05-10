@@ -41,7 +41,7 @@
 
 #include <fstream>
 
-#include "ompl/LKH-2.0.7//SRC/INCLUDE/LKH.h"
+#include "LKH.h"
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <boost/thread.hpp>
@@ -51,6 +51,7 @@ ompl::geometric::TSPPlanner::TSPPlanner (const ompl::base::SpaceInformationPtr &
     
 {
     statesSet = false;
+    useMotionValidator = true;
     specs_.approximateSolutions = true;
     specs_.multithreaded = true;
     specs_.optimizingPaths = true;
@@ -128,25 +129,26 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
         for(int j = i+1; j < maxID; j++)
         {
           	cs.str(std::string());
-
-          	if(mot->checkMotion(states_[i],states_[j])){
+          	if(useMotionValidator){
+          		if(mot->checkMotion(states_[i],states_[j])){
           		
             	
-            	cs << ((int) 100*(opt->motionCost(states_[i],states_[j]).value()));
-            	cmatrix += cs.str();
-            	cmatrix += "\n";
+            		cs << ((int) 100*(opt->motionCost(states_[i],states_[j]).value()));
+            		cmatrix += cs.str();
+            		cmatrix += "\n";
             	
-            	pathMatrix[i*maxID + j].append(ompl::geometric::PathGeometric(si_,states_[i],states_[j]));
+            		pathMatrix[i*maxID + j].append(ompl::geometric::PathGeometric(si_,states_[i],states_[j]));
             	
-            	pathMatrix[j*maxID + i].append(ompl::geometric::PathGeometric(si_,states_[j],states_[i]));
+            		pathMatrix[j*maxID + i].append(ompl::geometric::PathGeometric(si_,states_[j],states_[i]));
             	}
+            }
           	else
           	{   localPdef->clearSolutionPaths();
           		localPdef->clearStartStates();
           		localPdef->clearGoal();
             	localPdef->setStartAndGoalStates(states_[i],states_[j]);
             
-         		localPlanner_->clear();
+         		//localPlanner_->clear();
             	localPlanner_->setProblemDefinition(localPdef);
             	
             	if(localPlanner_->solve(localPlanningTime_))

@@ -107,6 +107,10 @@ namespace ompl
 
             void setStates(std::vector< base::State * > states);
 
+            void setUsageOfMotionValidator(bool use){
+                useMotionValidator = use;
+            }
+
 
         protected:
             /// \brief The function that the planning threads execute when
@@ -122,6 +126,8 @@ namespace ompl
             double localPlanningTime_;
 
             bool statesSet;
+
+            bool useMotionValidator;
 
         };
     }
