@@ -141,6 +141,32 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
             	
             		pathMatrix[j*maxID + i].append(ompl::geometric::PathGeometric(si_,states_[j],states_[i]));
             	}
+                else
+            {   localPdef->clearSolutionPaths();
+                localPdef->clearStartStates();
+                localPdef->clearGoal();
+                localPdef->setStartAndGoalStates(states_[i],states_[j]);
+            
+                //localPlanner_->clear();
+                localPlanner_->setProblemDefinition(localPdef);
+                
+                if(localPlanner_->solve(localPlanningTime_))
+                {
+                    pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                    pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                    pathMatrix[j*maxID + i].reverse();
+                    cs <<  ((int) 100*(localPdef->getSolutionPath()->cost(opt).value()));
+                    alwaysExact = !localPdef->hasApproximateSolution();
+                    std::cout<< "Cost local: " << cs.str() << " ";
+                    cmatrix += cs.str();
+                    cmatrix += "\n";
+                }
+                else{
+                    cs << 10000000;
+                    cmatrix += cs.str();
+                    cmatrix += "\n";
+                }
+            }
             }
           	else
           	{   localPdef->clearSolutionPaths();
