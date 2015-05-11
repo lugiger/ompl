@@ -111,6 +111,9 @@ namespace ompl
                 useMotionValidator = use;
             }
 
+            void setClearLocalPlanner(bool use){
+                clearLocalPlannerForEachIteration = use;
+            }
 
         protected:
             /// \brief The function that the planning threads execute when
@@ -128,6 +131,8 @@ namespace ompl
             bool statesSet;
 
             bool useMotionValidator;
+
+            bool clearLocalPlannerForEachIteration;
 
         };
     }

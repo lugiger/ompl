@@ -57,6 +57,7 @@ ompl::geometric::TSPPlanner::TSPPlanner (const ompl::base::SpaceInformationPtr &
     specs_.optimizingPaths = true;
     localPlanner_ = ompl::base::PlannerPtr(new ompl::geometric::RRTstar(si));
     localPlanningTime_ = 1.0; 
+    clearLocalPlannerForEachIteration = true;
     /*Planner::declareParam<bool>("skip_invalid_states", this, &TSPPlanner::setShortcut, &TSPPlanner::isShortcutting, "0,1");
     Planner::declareParam<bool>("hybridize", this, &TSPPlanner::setHybridize, &TSPPlanner::isHybridizing, "0,1");
     Planner::declareParam<unsigned int>("max_hybrid_paths", this, &TSPPlanner::setMaxHybridizationPath, &TSPPlanner::maxHybridizationPaths, "0:1:50");
@@ -146,8 +147,8 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
                 localPdef->clearStartStates();
                 localPdef->clearGoal();
                 localPdef->setStartAndGoalStates(states_[i],states_[j]);
-            
-                //localPlanner_->clear();
+                if(clearLocalPlannerForEachIteration)
+                localPlanner_->clear();
                 localPlanner_->setProblemDefinition(localPdef);
                 
                 if(localPlanner_->solve(localPlanningTime_))
@@ -173,8 +174,8 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
           		localPdef->clearStartStates();
           		localPdef->clearGoal();
             	localPdef->setStartAndGoalStates(states_[i],states_[j]);
-            
-         		//localPlanner_->clear();
+                if(clearLocalPlannerForEachIteration)
+         		localPlanner_->clear();
             	localPlanner_->setProblemDefinition(localPdef);
             	
             	if(localPlanner_->solve(localPlanningTime_))
