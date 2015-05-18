@@ -41,7 +41,7 @@
 
 #include <vector>
 
-enum PathSimplifierType { NOSIMPLIFIER , SHORTCUTTING, SMOOTHING };
+enum PathSimplifierType { NOSIMPLIFIER , SHORTCUTTING, SMOOTHING,SIMPLIFY_MAX, SIMPLIFY_WITH_TIME };
 namespace ompl
 {
 
@@ -124,6 +124,10 @@ namespace ompl
 
             }
 
+	    void setlocalSimplificationTime(double time){
+                localSimplificationTime_ = time;
+
+            }
         protected:
             /// \brief The function that the planning threads execute when
             /// solving a motion planning problem.
@@ -136,6 +140,8 @@ namespace ompl
             std::vector< base::State * > states_;
 
             double localPlanningTime_;
+		
+	    double localSimplificationTime_;
 
             bool statesSet;
 
