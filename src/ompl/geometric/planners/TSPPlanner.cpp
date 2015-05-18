@@ -231,6 +231,7 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
                         case SHORTCUTTING:
                             pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
                             psk_->shortcutPath(pathMatrix[i*maxID + j], 5, 5, 0.33, 0.005);
+                            std::cout<< "Simplified Path..\n ";
                             pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
                             pathMatrix[j*maxID + i].reverse();
                             cs <<  ((int) 100*(pathMatrix[i*maxID + j].cost(opt).value()));
@@ -242,6 +243,7 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
                         case SMOOTHING:
                             pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
                             psk_->smoothBSpline(pathMatrix[i*maxID + j]);
+                            std::cout<< "Simplified Path..\n ";
                             pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
                             pathMatrix[j*maxID + i].reverse();
                             cs <<  ((int) 100*(pathMatrix[i*maxID + j].cost(opt).value()));
