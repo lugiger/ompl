@@ -145,17 +145,77 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
             	
             		pathMatrix[j*maxID + i].append(ompl::geometric::PathGeometric(si_,states_[j],states_[i]));
             	}
-                else
-            {   localPdef->clearSolutionPaths();
-                localPdef->clearStartStates();
-                localPdef->clearGoal();
-                localPdef->setStartAndGoalStates(states_[i],states_[j]);
-                if(clearLocalPlannerForEachIteration)
-                localPlanner_->clear();
-                localPlanner_->setProblemDefinition(localPdef);
+                else{
+                    localPdef->clearSolutionPaths();
+                    localPdef->clearStartStates();
+                    localPdef->clearGoal();
+                    localPdef->setStartAndGoalStates(states_[i],states_[j]);
+                    if(clearLocalPlannerForEachIteration)
+                        localPlanner_->clear();
+                    localPlanner_->setProblemDefinition(localPdef);
                 
-                if(localPlanner_->solve(localPlanningTime_))
-                {   
+                    if(localPlanner_->solve(localPlanningTime_))
+                    {   
+                        switch(pstype_){
+
+                            case NOSIMPLIFIER:
+                                pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                                pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                                pathMatrix[j*maxID + i].reverse();
+                                cs <<  ((int) 100*(localPdef->getSolutionPath()->cost(opt).value()));
+                                alwaysExact = !localPdef->hasApproximateSolution();
+                                std::cout<< "Cost local: " << cs.str() << " ";
+                                cmatrix += cs.str();
+                                cmatrix += "\n";
+                            break;
+                            case SHORTCUTTING:
+                                pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                                psk_->shortcutPath(pathMatrix[i*maxID + j], 5, 5, 0.33, 0.005);
+                                pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                                pathMatrix[j*maxID + i].reverse();
+                                cs <<  ((int) 100*(pathMatrix[i*maxID + j].cost(opt).value()));
+                                alwaysExact = !localPdef->hasApproximateSolution();
+                                std::cout<< "Cost local: " << cs.str() << " ";
+                                cmatrix += cs.str();
+                                cmatrix += "\n";
+                            break;
+                            case SMOOTHING:
+                                pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                                psk_->smoothBSpline(pathMatrix[i*maxID + j]);
+                                pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                                pathMatrix[j*maxID + i].reverse();
+                                cs <<  ((int) 100*(pathMatrix[i*maxID + j].cost(opt).value()));
+                                alwaysExact = !localPdef->hasApproximateSolution();
+                                std::cout<< "Cost local: " << cs.str() << " ";
+                                cmatrix += cs.str();
+                                cmatrix += "\n";
+                            break;
+                            default:
+                                OMPL_INFORM("NOT A VALID SIMPLIFIER CHOSEN!");
+                            };
+
+                    }           
+
+
+                    else{
+                        cs << 10000000;
+                        std::cout<< "Cost local: " << cs.str() << " ";
+                        cmatrix += cs.str();
+                        cmatrix += "\n";
+                    }
+                }
+            }
+          	else
+          	{   localPdef->clearSolutionPaths();
+          		localPdef->clearStartStates();
+          		localPdef->clearGoal();
+            	localPdef->setStartAndGoalStates(states_[i],states_[j]);
+                if(clearLocalPlannerForEachIteration)
+         		localPlanner_->clear();
+            	localPlanner_->setProblemDefinition(localPdef);
+            	
+            	if(localPlanner_->solve(localPlanningTime_))
+            	{   
                     switch(pstype_){
 
                         case NOSIMPLIFIER:
@@ -203,33 +263,6 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
                     cmatrix += cs.str();
                     cmatrix += "\n";
                 }
-            }
-            }
-          	else
-          	{   localPdef->clearSolutionPaths();
-          		localPdef->clearStartStates();
-          		localPdef->clearGoal();
-            	localPdef->setStartAndGoalStates(states_[i],states_[j]);
-                if(clearLocalPlannerForEachIteration)
-         		localPlanner_->clear();
-            	localPlanner_->setProblemDefinition(localPdef);
-            	
-            	if(localPlanner_->solve(localPlanningTime_))
-            	{
-              		pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
-              		pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
-              		pathMatrix[j*maxID + i].reverse();
-              		cs <<  ((int) 100*(localPdef->getSolutionPath()->cost(opt).value()));
-              		alwaysExact = !localPdef->hasApproximateSolution();
-              		std::cout<< "Cost local: " << cs.str() << " ";
-              		cmatrix += cs.str();
-            		cmatrix += "\n";
-            	}
-            	else{
-              		cs << 10000000;
-              		cmatrix += cs.str();
-            		cmatrix += "\n";
-            	}
           	}
 
           	
