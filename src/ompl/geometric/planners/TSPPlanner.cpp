@@ -45,11 +45,13 @@
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/planners/rrt/RRTConnect.h>
 #include <boost/thread.hpp>
+#include <ompl/geometric/PathSimplifier.h>
 
 ompl::geometric::TSPPlanner::TSPPlanner (const ompl::base::SpaceInformationPtr &si) :
     ompl::base::Planner(si, "TSPPlanner")
     
 {
+    pstype_ = NOSIMPLIFIER;
     statesSet = false;
     useMotionValidator = true;
     specs_.approximateSolutions = true;
@@ -93,6 +95,7 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
     //base::Goal *goal = pdef_->getGoal().get();
     //std::vector<boost::thread*> threads(planners_.size());
 	bool alwaysExact = true;
+    ompl::geometric::PathSimplifierPtr psk_(new ompl::geometric::PathSimplifier(si_));
     base::ProblemDefinitionPtr localPdef(new base::ProblemDefinition(si_));
     base::MotionValidatorPtr mot = si_->getMotionValidator();
     base::StateValidityCheckerPtr sta = si_->getStateValidityChecker();
@@ -152,18 +155,51 @@ ompl::base::PlannerStatus ompl::geometric::TSPPlanner::solve(const ompl::base::P
                 localPlanner_->setProblemDefinition(localPdef);
                 
                 if(localPlanner_->solve(localPlanningTime_))
-                {
-                    pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
-                    pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
-                    pathMatrix[j*maxID + i].reverse();
-                    cs <<  ((int) 100*(localPdef->getSolutionPath()->cost(opt).value()));
-                    alwaysExact = !localPdef->hasApproximateSolution();
-                    std::cout<< "Cost local: " << cs.str() << " ";
-                    cmatrix += cs.str();
-                    cmatrix += "\n";
-                }
+                {   
+                    switch(pstype_){
+
+                        case NOSIMPLIFIER:
+                            pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                            pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                            pathMatrix[j*maxID + i].reverse();
+                            cs <<  ((int) 100*(localPdef->getSolutionPath()->cost(opt).value()));
+                            alwaysExact = !localPdef->hasApproximateSolution();
+                            std::cout<< "Cost local: " << cs.str() << " ";
+                            cmatrix += cs.str();
+                            cmatrix += "\n";
+                        break;
+                        case SHORTCUTTING:
+                            pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                            psk_->shortcutPath(pathMatrix[i*maxID + j], 5, 5, 0.33, 0.005);
+                            pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                            pathMatrix[j*maxID + i].reverse();
+                            cs <<  ((int) 100*(pathMatrix[i*maxID + j].cost(opt).value()));
+                            alwaysExact = !localPdef->hasApproximateSolution();
+                            std::cout<< "Cost local: " << cs.str() << " ";
+                            cmatrix += cs.str();
+                            cmatrix += "\n";
+                        break;
+                        case SMOOTHING:
+                            pathMatrix[i*maxID + j].append(*(boost::static_pointer_cast<ompl::geometric::PathGeometric>(localPdef->getSolutionPath())));
+                            psk_->smoothBSpline(pathMatrix[i*maxID + j]);
+                            pathMatrix[j*maxID + i].append(pathMatrix[i*maxID + j]);
+                            pathMatrix[j*maxID + i].reverse();
+                            cs <<  ((int) 100*(pathMatrix[i*maxID + j].cost(opt).value()));
+                            alwaysExact = !localPdef->hasApproximateSolution();
+                            std::cout<< "Cost local: " << cs.str() << " ";
+                            cmatrix += cs.str();
+                            cmatrix += "\n";
+                        break;
+                        default:
+                            OMPL_INFORM("NOT A VALID SIMPLIFIER CHOSEN!");
+                        };
+
+                }           
+
+
                 else{
                     cs << 10000000;
+                    std::cout<< "Cost local: " << cs.str() << " ";
                     cmatrix += cs.str();
                     cmatrix += "\n";
                 }

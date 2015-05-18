@@ -38,10 +38,14 @@
 #define OMPL_GEOMETRIC_PLANNERS_TSPPLANNER_
 
 #include "ompl/base/Planner.h"
+
 #include <vector>
 
+enum PathSimplifierType { NOSIMPLIFIER , SHORTCUTTING, SMOOTHING };
 namespace ompl
 {
+
+   
     namespace geometric
     {
         
@@ -115,6 +119,11 @@ namespace ompl
                 clearLocalPlannerForEachIteration = use;
             }
 
+            void setPathSimplifierType(PathSimplifierType type){
+                pstype_ = type;
+
+            }
+
         protected:
             /// \brief The function that the planning threads execute when
             /// solving a motion planning problem.
@@ -133,6 +142,8 @@ namespace ompl
             bool useMotionValidator;
 
             bool clearLocalPlannerForEachIteration;
+
+            PathSimplifierType pstype_;
 
         };
     }
